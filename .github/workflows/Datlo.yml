@@ -1,0 +1,50 @@
+name: 🎮 VPS Windows + Sunshine + Moonlight
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 360   # VPS chạy tối đa 6h
+
+    steps:
+    - name: ⚙️ Setup User + RDP
+      run: |
+        # Bật RDP để phòng trường hợp cần
+        Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        net user datlohe Dat@123456 /add
+        net localgroup administrators datlohe /add
+        Write-Host "✅ User: datlohe / Password: Dat@123456"
+
+    - name: 🌞 Cài Sunshine (Game Streaming)
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/Sunshine-Windows-Installer.exe" -OutFile "Sunshine-Setup.exe"
+        Start-Process -FilePath "Sunshine-Setup.exe" -ArgumentList "/quiet" -Wait
+        Write-Host "✅ Sunshine đã cài xong!"
+
+        # Mở firewall cho Moonlight
+        New-NetFirewallRule -DisplayName "Sunshine TCP 47984" -Direction Inbound -Protocol TCP -LocalPort 47984 -Action Allow
+        New-NetFirewallRule -DisplayName "Sunshine TCP 47989" -Direction Inbound -Protocol TCP -LocalPort 47989 -Action Allow
+        New-NetFirewallRule -DisplayName "Sunshine UDP 48010" -Direction Inbound -Protocol UDP -LocalPort 48010 -Action Allow
+
+    - name: ☁️ Cài Cloudflared
+      run: |
+        Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
+        Write-Host "✅ Cloudflared tải xong!"
+
+        # Tạo tunnel cho Sunshine (47984 TCP)
+        Start-Process -FilePath ".\cloudflared.exe" -ArgumentList "tunnel --url tcp://localhost:47984" -NoNewWindow
+
+        Start-Sleep -Seconds 15
+        Write-Host "============================"
+        Write-Host "🌍 VPS sẵn sàng!"
+        Write-Host "👤 User: datlohe"
+        Write-Host "🔑 Password: Dat@123456"
+        Write-Host "👉 Mở Moonlight, thêm server với link hiển thị trong log Cloudflared ở trên"
+        Write-Host "============================"
+
+    - name: ⏳ Giữ VPS chạy
+      run: |
+        while ($true) { Start-Sleep -Seconds 60 }
