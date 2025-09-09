@@ -18,17 +18,20 @@ jobs:
         net localgroup administrators datlohe /add
         Write-Host "✅ User: datlohe / Password: Dat@123456"
 
-    - name: 🌞 Cài Sunshine (Game Streaming)
+    - name: 🌞 Cài Sunshine (Portable)
       run: |
-        Invoke-WebRequest -Uri "https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/Sunshine-Windows-Installer.exe" -OutFile "Sunshine-Setup.exe"
-        Start-Process -FilePath "Sunshine-Setup.exe" -ArgumentList "/quiet" -Wait
-        Write-Host "✅ Sunshine đã cài xong!"
+        Invoke-WebRequest -Uri "https://github.com/LizardByte/Sunshine/releases/download/v0.23.1/sunshine-windows.zip" -OutFile "sunshine.zip"
+        Expand-Archive sunshine.zip -DestinationPath "C:\Sunshine" -Force
+        cd C:\Sunshine
+        Write-Host "✅ Sunshine Portable đã giải nén!"
 
         # Mở firewall cho Moonlight
         New-NetFirewallRule -DisplayName "Sunshine TCP 47984" -Direction Inbound -Protocol TCP -LocalPort 47984 -Action Allow
         New-NetFirewallRule -DisplayName "Sunshine TCP 47989" -Direction Inbound -Protocol TCP -LocalPort 47989 -Action Allow
         New-NetFirewallRule -DisplayName "Sunshine UDP 48010" -Direction Inbound -Protocol UDP -LocalPort 48010 -Action Allow
 
+        # Chạy Sunshine nền
+        Start-Process -FilePath "C:\Sunshine\sunshine.exe" -ArgumentList "-config C:\Sunshine\config\sunshine.conf" -NoNewWindow
     - name: ☁️ Cài Cloudflared
       run: |
         Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
